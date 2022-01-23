@@ -15,3 +15,8 @@ This tool is to paste images on the board (idk why I named it paint instead of p
 - Choose the image you want to draw
 - Wait until sorting pixels are finished
 - move the mouse to the lower right corner of where you want the image to be drawn and press "CTRL + V"
+
+## To-Do list:
+
+- Adding text tool to type a pixelated text
+- Building a standalone version with gui (very long term, xd)
