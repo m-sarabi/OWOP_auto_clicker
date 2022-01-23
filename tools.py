@@ -1,10 +1,12 @@
 from PIL import Image
 import pyautogui
 import keyboard
+import easygui
 # import random
 import mouse
 import time
 import math
+import os
 
 zoom_level_widths = [40, 20, 10]  # other zoom levels are bad
 zoom = zoom_level_widths[int(input('Zoom level(0, 1, 2): '))]  # reading grid pixels from input zoom level
@@ -30,8 +32,9 @@ def stop():
 def painter():
     ignore_color = (255, 255, 255)  # color to ignore in the image
     # reading the image file
-    file_name = input('Enter Image name with extension: ')
-    file = Image.open('C:/Users/msara/Desktop/To Draw/' + file_name)
+    # file_name = input('Enter Image name with extension: ')
+    file = Image.open(easygui.fileopenbox(msg='Select Image to Draw',   default=os.path.expanduser("~/Desktop/"),
+                                          filetypes=["*.png", "*.bmp", "*.jpg", "Image files"]))
     file = file.convert('RGB')
     width, height = file.size
     color_dict = {}
