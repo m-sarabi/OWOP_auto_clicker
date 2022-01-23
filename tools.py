@@ -1,7 +1,9 @@
 from PIL import Image
+import numpy as np
 import pyautogui
 import keyboard
 import easygui
+import letters
 # import random
 import mouse
 import time
@@ -14,13 +16,6 @@ pyautogui.PAUSE = 0.035  # pause between pyautogui actions
 MAX_DIST = 15  # how far is too far (it is about 19 pixels but less is better for high pings)
 
 
-# distance between two points
-def point_dist(p1, p2):
-    if len(p1) != 2 or len(p2) != 2:
-        raise ValueError('points should have only x and y values')
-    return round(math.sqrt((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2), 3)
-
-
 # stop if q is pressed
 def stop():
     if keyboard.is_pressed('q'):
@@ -28,41 +23,54 @@ def stop():
     return False
 
 
-# main function for drawing an image
-def painter():
-    ignore_color = (255, 255, 255)  # color to ignore in the image
-    # reading the image file
-    # file_name = input('Enter Image name with extension: ')
-    file = Image.open(easygui.fileopenbox(msg='Select Image to Draw',   default=os.path.expanduser("~/Desktop/"),
-                                          filetypes=["*.png", "*.bmp", "*.jpg", "Image files"]))
-    file = file.convert('RGB')
-    width, height = file.size
-    color_dict = {}
+# distance between two points
+def point_dist(p1, p2):
+    if len(p1) != 2 or len(p2) != 2:
+        raise ValueError('points should have only x and y values')
+    return round(math.sqrt((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2), 3)
+
+
+def sort_by_distance(image_dict):
+    print('sorting pixels for each color')
+    # sort pixels by distance for each color
+    for i in image_dict:
+        sorted_list = [image_dict[i][0]]
+        del image_dict[i][0]
+        while len(image_dict[i]) > 0:
+            distance_list = [point_dist(sorted_list[-1], _) for _ in image_dict[i]]
+            sorted_list.append([x for _, x in sorted(zip(distance_list, image_dict[i]))][0])
+            image_dict[i].remove(sorted_list[-1])
+        image_dict[i] = sorted_list
+    return image_dict
+
+
+def paste_image(ignore_color=(255, 255, 255), image=None):
+    # reading the image from file if not provided
+    if image is None:
+        image = Image.open(easygui.fileopenbox(msg='Select Image to Draw', default=os.path.expanduser("~/Desktop/"),
+                                               filetypes=["*.png", "*.bmp", "*.jpg", "Image files"])).convert('RGB')
+    width, height = image.size
+    image_dict = {}
     print('separating each color into a dictionary')
     for h in range(height):
         for w in range(width):
-            color = file.getpixel((w, h))
-            if color in color_dict:
-                color_dict[color].append((w, h))
+            color = image.getpixel((w, h))
+            if color in image_dict:
+                image_dict[color].append((w, h))
             else:
-                color_dict[color] = [(w, h)]
-    for i in color_dict.keys():
-        if i == ignore_color:
-            del color_dict[i]
-            break
+                image_dict[color] = [(w, h)]
+    if ignore_color:
+        for i in image_dict.keys():
+            if i == ignore_color:
+                del image_dict[i]
+                break
+    image_dict = sort_by_distance(image_dict)
+    painter(image_dict, width, height)
 
-    print('sorting pixels for each color')
-    # sort pixels by distance for each color
-    for i in color_dict:
-        sorted_list = [color_dict[i][0]]
-        del color_dict[i][0]
-        while len(color_dict[i]) > 0:
-            distance_list = [point_dist(sorted_list[-1], _) for _ in color_dict[i]]
-            sorted_list.append([x for _, x in sorted(zip(distance_list, color_dict[i]))][0])
-            color_dict[i].remove(sorted_list[-1])
-        color_dict[i] = sorted_list
+
+# main function for drawing an image
+def painter(image_dict, width, height):
     last_color = []
-
     while True:
         print('press "Ctrl + V" to start!')
         keyboard.wait('ctrl+v')
@@ -81,8 +89,8 @@ def painter():
         keyboard.press('esc')
         time.sleep(0.25)
         color_changed = False
-        for i in color_dict:
-            for j in color_dict[i]:
+        for i in image_dict:
+            for j in image_dict[i]:
                 if stop():
                     return
                 x_y = (j[0] * zoom + x0, j[1] * zoom + y0)
@@ -108,3 +116,29 @@ def painter():
             if color_changed:
                 time.sleep(0.15)
             color_changed = False
+
+
+def text_to_image(text, text_color, background_color):
+    image_list = []
+    for i in range(7):
+        image_list.append([])
+    for i in range(len(image_list)):
+        for char_index in range(len(text)):
+            if text[char_index] in letters.LettersDict.keys():
+                image_list[i].extend(letters.LettersDict[text[char_index]][i])
+                if char_index < len(text) - 1:
+                    image_list[i].append(0)
+    for i in range(len(image_list)):
+        for j in range(len(image_list[i])):
+            if image_list[i][j] == 1:
+                image_list[i][j] = text_color
+            else:
+                image_list[i][j] = background_color
+    image_array = np.asarray(image_list, dtype=np.uint8)
+    return Image.fromarray(image_array).convert('RGB')
+
+
+def write_text(color=(0, 0, 0), background=(255, 255, 255)):
+    text = input('Enter the text:')
+    text_image = text_to_image(text, color, background)
+    paste_image(image=text_image)
