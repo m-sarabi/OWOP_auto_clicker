@@ -1,7 +1,7 @@
 from win10toast import ToastNotifier
 import tools
 
-to_do = int(input('What to do:\n[1]: Painter\n[2]: Text Tool\n'))
+to_do = int(input('What to do:\n[1]: Paste Image\n[2]: Text Tool\n'))
 match to_do:
     case 1:
         tools.paste_image()
