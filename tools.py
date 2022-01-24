@@ -87,8 +87,6 @@ def painter(image_dict, width, height):
                 start_status[i].append(start_im.getpixel(((i + 0.5) * zoom, (j + 0.5) * zoom)))
         x_y_last = (0, 0)
         time.sleep(0.25)
-        keyboard.press('esc')
-        time.sleep(0.25)
         color_changed = False
         for i in image_dict:
             for j in image_dict[i]:
