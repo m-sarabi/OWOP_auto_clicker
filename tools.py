@@ -119,7 +119,7 @@ def painter(image_dict, width, height):
 
 def text_to_image(text, text_color, background_color):
     image_list = []
-    for i in range(7):
+    for i in range(8):
         image_list.append([])
     for i in range(len(image_list)):
         for char_index in range(len(text)):
