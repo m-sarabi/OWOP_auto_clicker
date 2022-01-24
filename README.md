@@ -24,3 +24,5 @@ This tool is to paste images on the board.
 ## To-Do list:
 
 - Building a standalone version with gui (very long term, xd)
+- Complete all letters and symbols for the Writer tool
+- Add a small font version for the writer tool
