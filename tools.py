@@ -66,65 +66,55 @@ def paste_image(ignore_color=(255, 255, 255), image=None):
                 break
     image_dict = sort_by_distance(image_dict)
     painter(image_dict, width, height)
+    return image_dict, width, height
 
 
 # main function for drawing an image
 def painter(image_dict, width, height):
     done = False
-    while not done:
-        last_color = []
-        print('press "Ctrl + V" to start!')
-        keyboard.wait('ctrl+v')
-        x0, y0 = pyautogui.position()  # bottom right corner of the canvas
-        # y0 = y0 - (height - 1) * zoom  # from bottom left
-        x0, y0 = [x0 - (width - 1) * zoom, y0 - (height - 1) * zoom]  # convert to top left corner
-        start_im = pyautogui.screenshot(region=(x0 - zoom / 2, y0 - zoom / 2,
-                                                x0 + (width - 0.5) * zoom, y0 + (height - 0.5) * zoom))
-        start_status = []
-        for i in range(width):
-            start_status.append([])
-            for j in range(height):
-                start_status[i].append(start_im.getpixel(((i + 0.5) * zoom, (j + 0.5) * zoom)))
-        x_y_last = (0, 0)
-        time.sleep(0.25)
-        color_changed = False
-        for i in image_dict:
-            for j in image_dict[i]:
-                if stop():
-                    return
-                x_y = (j[0] * zoom + x0, j[1] * zoom + y0)
-                if start_status[j[0]][j[1]] == i:
-                    continue
-                if not color_changed:
-                    color_changed = True
-                    if last_color != [i[0], i[1], i[2]]:
-                        pyautogui.press('f')
-                        time.sleep(0.1)
-                        pyautogui.write(f'{i[0]},{i[1]},{i[2]}')
-                        last_color = [i[0], i[1], i[2]]
-                        time.sleep(0.1)
-                        pyautogui.press('return')
-                if math.sqrt((x_y[0] - x_y_last[0]) ** 2 + (x_y[1] - x_y_last[1]) ** 2) > zoom * MAX_DIST:
-                    time.sleep(0.15)
-                    mouse.move(x_y[0], x_y[1])
-                    time.sleep(0.15)
-                mouse.move(x_y[0], x_y[1])
-                mouse.click()
-                time.sleep(0.038)
-                x_y_last = x_y
-            if color_changed:
+    last_color = []
+    print('press "Ctrl + V" to start!')
+    keyboard.wait('ctrl+v')
+    x0, y0 = pyautogui.position()  # bottom right corner of the canvas
+    # y0 = y0 - (height - 1) * zoom  # from bottom left
+    x0, y0 = [x0 - (width - 1) * zoom, y0 - (height - 1) * zoom]  # convert to top left corner
+    start_im = pyautogui.screenshot(region=(x0 - zoom / 2, y0 - zoom / 2,
+                                            x0 + (width - 0.5) * zoom, y0 + (height - 0.5) * zoom))
+    start_status = []
+    for i in range(width):
+        start_status.append([])
+        for j in range(height):
+            start_status[i].append(start_im.getpixel(((i + 0.5) * zoom, (j + 0.5) * zoom)))
+    x_y_last = (0, 0)
+    time.sleep(0.25)
+    color_changed = False
+    for i in image_dict:
+        for j in image_dict[i]:
+            if stop():
+                return
+            x_y = (j[0] * zoom + x0, j[1] * zoom + y0)
+            if start_status[j[0]][j[1]] == i:
+                continue
+            if not color_changed:
+                color_changed = True
+                if last_color != [i[0], i[1], i[2]]:
+                    pyautogui.press('f')
+                    time.sleep(0.1)
+                    pyautogui.write(f'{i[0]},{i[1]},{i[2]}')
+                    last_color = [i[0], i[1], i[2]]
+                    time.sleep(0.1)
+                    pyautogui.press('return')
+            if math.sqrt((x_y[0] - x_y_last[0]) ** 2 + (x_y[1] - x_y_last[1]) ** 2) > zoom * MAX_DIST:
                 time.sleep(0.15)
-            color_changed = False
-        options = input('[r]: Repeat\n[n]: New image\n[q]: Quit\n')
-        match options:
-            case 'r':
-                pass
-            case 'n':
-                paste_image()
-            case 'q':
-                done = True
-            case _:
-                print('get gud! try again.')
+                mouse.move(x_y[0], x_y[1])
+                time.sleep(0.15)
+            mouse.move(x_y[0], x_y[1])
+            mouse.click()
+            time.sleep(0.038)
+            x_y_last = x_y
+        if color_changed:
+            time.sleep(0.15)
+        color_changed = False
 
 
 def text_to_image(text, text_color, background_color):
