@@ -1,4 +1,4 @@
-from PIL import Image
+from PIL import Image, ImageGrab
 import numpy as np
 import pyautogui
 import keyboard
@@ -47,8 +47,19 @@ def sort_by_distance(image_dict):
 def paste_image(ignore_color=(255, 255, 255), image=None):
     # reading the image from file if not provided
     if image is None:
-        image = Image.open(easygui.fileopenbox(msg='Select Image to Draw', default=os.path.expanduser("~/Desktop/"),
-                                               filetypes=["*.png", "*.bmp", "*.jpg", "Image files"])).convert('RGB')
+        while True:
+            img_src = input('[f]: from file\n[c] from clipboard\n')
+            match img_src:
+                case 'f':
+                    image = Image.open(
+                        easygui.fileopenbox(msg='Select Image to Draw', default=os.path.expanduser("~/Desktop/"),
+                                            filetypes=["*.png", "*.bmp", "*.jpg", "Image files"])).convert('RGB')
+                    break
+                case 'c':
+                    image = ImageGrab.grabclipboard().convert('RGB')
+                    break
+                case _:
+                    print('get gud!')
     width, height = image.size
     image_dict = {}
     print('separating each color into a dictionary')
