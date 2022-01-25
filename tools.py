@@ -86,9 +86,9 @@ def painter(image_dict, width, height):
     last_color = []
     print('press "Ctrl + V" to start!')
     keyboard.wait('ctrl+v')
-    x0, y0 = pyautogui.position()  # bottom right corner of the canvas
+    x0, y0 = pyautogui.position()
     # y0 = y0 - (height - 1) * zoom  # from bottom left
-    x0, y0 = [x0 - (width - 1) * zoom, y0 - (height - 1) * zoom]  # convert to top left corner
+    # x0, y0 = [x0 - (width - 1) * zoom, y0 - (height - 1) * zoom]  # convert to top left corner
     start_im = pyautogui.screenshot(region=(x0 - zoom / 2, y0 - zoom / 2,
                                             x0 + (width - 0.5) * zoom, y0 + (height - 0.5) * zoom))
     start_status = []
