@@ -1,3 +1,5 @@
+import random
+
 from PIL import Image, ImageGrab
 import numpy as np
 import pyautogui
@@ -14,6 +16,7 @@ zoom_level_widths = [40, 20, 10]  # other zoom levels are bad
 zoom = zoom_level_widths[int(input('Zoom level(0, 1, 2): '))]  # reading grid pixels from input zoom level
 pyautogui.PAUSE = 0.035  # pause between pyautogui actions
 MAX_DIST = 15  # how far is too far (it is about 19 pixels but less is better for high pings)
+click_pause = 0.038
 
 
 # stop if q is pressed
@@ -30,21 +33,52 @@ def point_dist(p1, p2):
     return round(math.sqrt((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2), 3)
 
 
-def sort_by_distance(image_dict):
-    print('sorting pixels for each color')
+def path_length(points_list):
+    dist = 0
+    for i in range(len(points_list) - 1):
+        dist += point_dist(points_list[i + 1], points_list[i])
+    return dist
+
+
+def repeating_nn(points_list: list, timeout=5, min_repeat=2):
+    # print('sorting pixels for each color')
     # sort pixels by distance for each color
-    for i in image_dict:
-        sorted_list = [image_dict[i][0]]
-        del image_dict[i][0]
-        while len(image_dict[i]) > 0:
-            distance_list = [point_dist(sorted_list[-1], _) for _ in image_dict[i]]
-            sorted_list.append([x for _, x in sorted(zip(distance_list, image_dict[i]))][0])
-            image_dict[i].remove(sorted_list[-1])
-        image_dict[i] = sorted_list
-    return image_dict
+    all_nn = []
+    tic = time.time()
+    indexes = list(range(len(points_list)))
+    random.shuffle(indexes)
+    repeats = 0
+    for point_i in indexes:
+        repeats += 1
+        r_list = points_list.copy()
+        sorted_list = [r_list[point_i]]
+        del r_list[point_i]
+        while len(r_list) > 0:
+            distance_list = [point_dist(sorted_list[-1], _) for _ in r_list]
+            sorted_list.append([x for _, x in sorted(zip(distance_list, r_list))][0])
+            r_list.remove(sorted_list[-1])
+        all_nn.append(sorted_list)
+        if (time.time() - tic) > timeout and repeats >= min_repeat:
+            break
+    all_nn_dist = [path_length(i) for i in all_nn]
+    return [x for _, x in sorted(zip(all_nn_dist, all_nn))][0]
 
 
-def paste_image(ignore_color=(255, 255, 255), image=None):
+# def sort_by_distance(image_dict):
+#     print('sorting pixels for each color')
+#     # sort pixels by distance for each color
+#     for i in image_dict:
+#         sorted_list = [image_dict[i][0]]
+#         del image_dict[i][0]
+#         while len(image_dict[i]) > 0:
+#             distance_list = [point_dist(sorted_list[-1], _) for _ in image_dict[i]]
+#             sorted_list.append([x for _, x in sorted(zip(distance_list, image_dict[i]))][0])
+#             image_dict[i].remove(sorted_list[-1])
+#         image_dict[i] = sorted_list
+#     return image_dict
+
+
+def paste_image(ignore_color=(255, 255, 255), image=None, text=False):
     # reading the image from file if not provided
     if image is None:
         while True:
@@ -75,13 +109,16 @@ def paste_image(ignore_color=(255, 255, 255), image=None):
             if i == ignore_color:
                 del image_dict[i]
                 break
-    image_dict = sort_by_distance(image_dict)
-    painter(image_dict, width, height)
+    # image_dict = sort_by_distance(image_dict)
+    if text:
+        painter(image_dict, width, height, 10, 100)
+    else:
+        painter(image_dict, width, height, 5, 3)
     return image_dict, width, height
 
 
 # main function for drawing an image
-def painter(image_dict, width, height):
+def painter(image_dict, width, height, sort_time, sort_repeat):
     done = False
     last_color = []
     print('press "Ctrl + V" to start!')
@@ -100,12 +137,17 @@ def painter(image_dict, width, height):
     time.sleep(0.25)
     color_changed = False
     for i in image_dict:
+        click_count = 0
+        for xy in image_dict[i]:
+            if start_status[xy[0]][xy[1]] == i:
+                image_dict[i].remove(xy)
+        image_dict[i] = repeating_nn(image_dict[i])
         for j in image_dict[i]:
             if stop():
                 return
             x_y = (j[0] * zoom + x0, j[1] * zoom + y0)
-            if start_status[j[0]][j[1]] == i:
-                continue
+            # if start_status[j[0]][j[1]] == i:
+            #     continue
             if not color_changed:
                 color_changed = True
                 if last_color != [i[0], i[1], i[2]]:
@@ -121,7 +163,11 @@ def painter(image_dict, width, height):
                 time.sleep(0.15)
             mouse.move(x_y[0], x_y[1])
             mouse.click()
-            time.sleep(0.038)
+            click_count += 1
+            if click_count <= 50:
+                time.sleep(click_pause/2)
+            else:
+                time.sleep(click_pause)
             x_y_last = x_y
         if color_changed:
             time.sleep(0.15)
@@ -152,4 +198,4 @@ def write_text(color=(0, 0, 0), background=(255, 255, 255)):
     while True:
         text = input('Enter the text:')
         text_image = text_to_image(text, color, background)
-        paste_image(image=text_image)
+        paste_image(image=text_image, text=True)
