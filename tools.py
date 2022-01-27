@@ -119,7 +119,6 @@ def paste_image(ignore_color=(255, 255, 255), image=None, text=False):
 
 # main function for drawing an image
 def painter(image_dict, width, height, sort_time, sort_repeat):
-    done = False
     last_color = []
     print('press "Ctrl + V" to start!')
     keyboard.wait('ctrl+v')
@@ -141,7 +140,7 @@ def painter(image_dict, width, height, sort_time, sort_repeat):
         for xy in image_dict[i]:
             if start_status[xy[0]][xy[1]] == i:
                 image_dict[i].remove(xy)
-        image_dict[i] = repeating_nn(image_dict[i])
+        image_dict[i] = repeating_nn(image_dict[i], timeout=sort_time, min_repeat=sort_repeat)
         for j in image_dict[i]:
             if stop():
                 return
