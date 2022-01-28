@@ -10,7 +10,7 @@ match to_do:
             options = input('[r]: Repeat\n[n]: New image\n[q]: Quit\n')
             match options:
                 case 'r':
-                    tools.painter(im[0], im[1], im[2])
+                    tools.painter(im[0], im[1], im[2], 5, 3)
                 case 'n':
                     im = tools.paste_image()
                 case 'q':

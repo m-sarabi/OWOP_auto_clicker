@@ -137,9 +137,14 @@ def painter(image_dict, width, height, sort_time, sort_repeat):
     color_changed = False
     for i in image_dict:
         click_count = 0
-        for xy in image_dict[i]:
-            if start_status[xy[0]][xy[1]] == i:
-                image_dict[i].remove(xy)
+        c = 0
+        while c < len(image_dict[i]):
+            if start_status[image_dict[i][c][0]][image_dict[i][c][1]] == i:
+                image_dict[i].remove(image_dict[i][c])
+                continue
+            c += 1
+        if len(image_dict[i]) == 0:
+            continue
         image_dict[i] = repeating_nn(image_dict[i], timeout=sort_time, min_repeat=sort_repeat)
         for j in image_dict[i]:
             if stop():
